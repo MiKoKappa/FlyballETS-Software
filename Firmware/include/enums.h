@@ -1,5 +1,4 @@
-// BatterySensor.h
-// Copyright (C) 2019 Alex Goris
+// Copyright (C) 2018 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,30 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#ifndef _BATTERYSENSOR_h
-#define _BATTERYSENSOR_h
+#ifndef ENUMS_H
+#define ENUMS_H
 
-#include "Arduino.h"
-
-class BatterySensorClass
+enum SystemModes
 {
-protected:
-public:
-   void init(uint8_t iBatterySensorPin);
-   void CheckBatteryVoltage();
-   uint16_t GetBatteryVoltage();
-   uint16_t GetBatteryPercentage();
-   uint16_t GetLastAnalogRead();
-
-private:
-   uint8_t _iBatterySensorPin;
-
-   int _iBatteryReadings[10];
-   int _iNumberOfBatteryReadings = 0;
-   uint16_t _iBatteryVoltage = 0;
-   uint16_t _iAverageBatteryReading;
+   MASTER,
+   SLAVE
 };
-
-extern BatterySensorClass BatterySensor;
 
 #endif

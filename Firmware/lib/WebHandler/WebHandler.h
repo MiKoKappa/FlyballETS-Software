@@ -17,11 +17,20 @@
 #include "LightsController.h"
 #include "BatterySensor.h"
 #include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+// #include <FS.h>
+// #include <SPIFFS.h>
+#include <ArduinoJson.h>
+#include "SettingsManager.h"
 #include "GPSHandler.h"
+#include "BatterySensor.h"
 #include <rom/rtc.h>
 #ifndef WebUIonSDcard
 #include "index.html.gz.h"
 #endif
+#include "SlaveHandler.h"
+#include "SystemManager.h"
+#include "global.h"
 
 
 class WebHandlerClass
@@ -35,11 +44,12 @@ protected:
    void _WsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len);
    bool _DoAction(JsonObject ActionObj, String *ReturnError, AsyncWebSocketClient *Client);
    void _SendRaceData(int iRaceId, int8_t iClientId);
+   //bool _GetRaceDataJsonString(int iRaceId, String &strJsonString);
    void _SendLightsData();
 
-   bool _ProcessConfig(JsonArray newConfig, String *ReturnError);
+   boolean _ProcessConfig(JsonArray newConfig, String *ReturnError);
 
-   bool _GetData(String dataType, JsonObject ReturnError);
+   boolean _GetData(String dataType, JsonObject ReturnError);
 
    void _SendSystemData(int8_t iClientId = -1);
    void _onAuth(AsyncWebServerRequest *request);
@@ -47,6 +57,8 @@ protected:
    bool _wsAuth(AsyncWebSocketClient *client);
    void _onHome(AsyncWebServerRequest *request);
    void _onFavicon(AsyncWebServerRequest *request);
+   void _CheckMasterStatus();
+   void _DisconnectMaster();
 
    unsigned long _lLastRaceDataBroadcast;
    unsigned long _lRaceDataBroadcastInterval;
@@ -58,7 +70,18 @@ protected:
    unsigned long _lLastBroadcast;
    stSystemData _SystemData;
    char _last_modified[50];
+   bool _bSlavePresent;
 
+   typedef struct
+   {
+      bool Configured;
+      IPAddress ip;
+      AsyncWebSocketClient *client;
+      uint8_t ClientID;
+      unsigned long LastCheck;
+      unsigned long LastReply;
+   } stMasterStatus;
+   stMasterStatus _MasterStatus;
    typedef struct
    {
       IPAddress ip;
@@ -74,6 +97,7 @@ public:
    void loop();
    bool _bUpdateLights = false;
    bool _bSendRaceData = false;
+   bool MasterConnected();
 };
 
 extern WebHandlerClass WebHandler;

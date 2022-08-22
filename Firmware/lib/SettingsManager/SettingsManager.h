@@ -5,7 +5,6 @@
 
 #include "Arduino.h"
 
-
 class SettingsManagerClass
 {
 protected:
@@ -15,18 +14,16 @@ public:
    void loop();
    void init();
 
-   String getSetting(const String& key, String defaultValue);
-   String getSetting(const String& key);
-   
-   bool setSetting(const String& key, String value);
+   String getSetting(const String &key, String defaultValue);
+   String getSetting(const String &key);
+
+   void setSetting(const String &key, String value);
 
    void saveSettings();
-   bool hasSetting(const String & key);
+   bool hasSetting(const String &key);
    void setDefaultSettings();
 };
 
 extern SettingsManagerClass SettingsManager;
 
-
 #endif
-

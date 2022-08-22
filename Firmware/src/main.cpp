@@ -35,11 +35,20 @@ IPAddress IPGateway(192, 168, 20, 1);
 IPAddress IPNetwork(192, 168, 20, 0);
 IPAddress IPSubnet(255, 255, 255, 0);
 
+//ESP32 multi core
+TaskHandle_t Task0;
+
+WifiManager wifiManager;
+
 void setup()
 {
-   EEPROM.begin(EEPROM_SIZE);
+   //Configure serial interface
    Serial.begin(115200);
+
+   //init SettingsManager
    SettingsManager.init();
+   //SettingsManager.setSetting("OperationMode", "0");
+   //SettingsManager.setSetting("APName", "FlyballETS");
 
    // Configure sensors pins
    pinMode(iS1Pin, INPUT_PULLDOWN); // ESP32 has no pull-down resistor on pin 34, but it's pulled-down anyway by 1kohm resistor in voltage leveler circuit
@@ -106,23 +115,16 @@ void setup()
    // Initialize RaceHandler class with S1 and S2 pins
    RaceHandler.init(iS1Pin, iS2Pin);
 
+   SystemManager.init();
+
    // Initialize simulatorclass pins if applicable
 #if Simulate
    Simulator.init(iS1Pin, iS2Pin);
 #endif
 
 #ifdef WiFiON
-   // Setup AP
-   WiFi.onEvent(WiFiEvent);
-   WiFi.mode(WIFI_AP);
-   String strAPName = SettingsManager.getSetting("APName");
-   String strAPPass = SettingsManager.getSetting("APPass");
-
-   if (!WiFi.softAP(strAPName.c_str(), strAPPass.c_str()))
-      ESP_LOGE(__FILE__, "Error initializing softAP!");
-   else
-      ESP_LOGI(__FILE__, "Wifi started successfully, AP name: %s, pass: %s", strAPName.c_str(), strAPPass.c_str());
-   WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
+   //Init Wifi setup
+   wifiManager.SetupWiFi();
 
    // configure webserver
    WebHandler.init(80);
@@ -167,6 +169,15 @@ void setup()
    ArduinoOTA.begin();
    mdnsServerSetup();
 #endif
+   xTaskCreatePinnedToCore(
+      Core0Loop,
+      "Task0",
+      8192,
+      NULL,
+      1,
+      &Task0,
+      0);
+
    //ESP_LOGI(__FILE__, "Setup running on core %d", xPortGetCoreID());
 
    iLaserOnTime = atoi(SettingsManager.getSetting("LaserOnTimer").c_str());
@@ -206,6 +217,10 @@ void loop()
 
    // Handle Race main processing
    RaceHandler.Main();
+
+   wifiManager.WiFiLoop();
+
+   SystemManager.loop();
 
 #if Simulate
    // Run simulator
@@ -325,6 +340,26 @@ void StopRaceMain()
 }
 
 /// <summary>
+///   Start a race.
+/// </summary>
+void StartRaceMain()
+{
+   if (LightsController.bModeNAFA)
+      LightsController.WarningStartSequence();
+   else
+      LightsController.InitiateStartSequence();
+}
+
+/// <summary>
+///   Stop a race.
+/// </summary>
+void StopRaceMain()
+{
+   RaceHandler.StopRace();
+   LightsController.DeleteSchedules();
+}
+
+/// <summary>
 ///   Starts (if stopped) or stops (if started) a race. Start is only allowed if race is stopped and reset.
 /// </summary>
 void StartStopRace()
@@ -346,33 +381,14 @@ void ResetRace()
    LightsController.ResetLights();
 }
 
-#ifdef WiFiON
-void WiFiEvent(WiFiEvent_t event)
+void Core0Loop(void *parameter)
 {
-   // Serial.printf("Wifi event %i\r\n", event);
-   switch (event)
+   SlaveHandler.init();
+   for (;;)
    {
-   case SYSTEM_EVENT_AP_START:
-      // ESP_LOGI(__FILE__, "AP Started");
-      WiFi.softAPConfig(IPGateway, IPGateway, IPSubnet);
-      if (WiFi.softAPIP() != IPGateway)
-      {
-         ESP_LOGE(__FILE__, "I am not running on the correct IP (%s instead of %s), rebooting!", WiFi.softAPIP().toString().c_str(), IPGateway.toString().c_str());
-         ESP.restart();
-      }
-      ESP_LOGI(__FILE__, "Ready on IP: %s, v%s", WiFi.softAPIP().toString().c_str(), APP_VER);
-      break;
-
-   case SYSTEM_EVENT_AP_STOP:
-      // ESP_LOGI(__FILE__, "AP Stopped");
-      break;
-
-   case SYSTEM_EVENT_AP_STAIPASSIGNED:
-      // ESP_LOGI(__FILE__, "IP assigned to new client");
-      break;
-
-   default:
-      break;
+      SlaveHandler.loop();
+      //yield();
+      vTaskDelay(5);
    }
 }
 
@@ -486,6 +502,22 @@ void HandleSerialCommands()
    // Toggle wifi on/off
    if (strSerialData == "wifi")
       ToggleWifi();
+   
+   if (strSerialData.indexOf("SET_LOGLEVEL=") > -1)
+   {
+      String strLogLevel = strSerialData.substring(13);
+      ESP_LOGI(__FILE__, "Setting loglevel to %s", strLogLevel.c_str());
+      if (strLogLevel.indexOf("ERROR") > -1)
+         esp_log_level_set("*", ESP_LOG_ERROR);
+      if (strLogLevel.indexOf("WARN") > -1)
+         esp_log_level_set("*", ESP_LOG_WARN);
+      if (strLogLevel.indexOf("INFO") > -1)
+         esp_log_level_set("*", ESP_LOG_INFO);
+      if (strLogLevel.indexOf("DEBUG") > -1)
+         esp_log_level_set("*", ESP_LOG_DEBUG);
+      if (strLogLevel.indexOf("VERB") > -1)
+         esp_log_level_set("*", ESP_LOG_VERBOSE);
+   }
 
    // Make sure this stays last in the function!
    if (strSerialData.length() > 0)

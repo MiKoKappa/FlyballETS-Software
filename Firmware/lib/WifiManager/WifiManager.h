@@ -1,5 +1,4 @@
-// BatterySensor.h
-// Copyright (C) 2019 Alex Goris
+// Copyright (C) 2018 Alex Goris
 // This file is part of FlyballETS-Software
 // FlyballETS-Software is free software : you can redistribute it and / or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,30 +13,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
-#ifndef _BATTERYSENSOR_h
-#define _BATTERYSENSOR_h
+#ifndef _WIFIMANAGER_H
+#define _WIFIMANAGER_H
 
 #include "Arduino.h"
+#include "WiFi.h"
 
-class BatterySensorClass
+#define WIFI_CHECK_INTERVAL 500
+
+class WifiManager
 {
-protected:
 public:
-   void init(uint8_t iBatterySensorPin);
-   void CheckBatteryVoltage();
-   uint16_t GetBatteryVoltage();
-   uint16_t GetBatteryPercentage();
-   uint16_t GetLastAnalogRead();
+    void SetupWiFi();
+    void WiFiLoop();
+    void WiFiEvent(WiFiEvent_t event, system_event_info_t info);
 
 private:
-   uint8_t _iBatterySensorPin;
+    IPAddress _IPGateway;
+    IPAddress _IPSubnet;
+    String _strAPName;
+    String _strSTAName;
 
-   int _iBatteryReadings[10];
-   int _iNumberOfBatteryReadings = 0;
-   uint16_t _iBatteryVoltage = 0;
-   uint16_t _iAverageBatteryReading;
+    unsigned long ulLastWifiCheck = 0;
 };
-
-extern BatterySensorClass BatterySensor;
 
 #endif

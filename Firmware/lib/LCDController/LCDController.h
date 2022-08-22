@@ -57,7 +57,8 @@ public:
       WifiState,
       GpsState,
       SDcardState,
-      BoxDirection
+      BoxDirection,
+      MasterSlaveConnection
    };
 
    void UpdateField(LCDFields lcdfieldField, String strNewValue);
@@ -76,7 +77,7 @@ private:
       int iFieldLength;
       String strText;
    };
-   struct SLCDField _SlcdfieldFields[21];
+   struct SLCDField _SlcdfieldFields[22];
 };
 
 extern LCDControllerClass LCDController;

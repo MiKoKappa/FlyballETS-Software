@@ -30,9 +30,9 @@
 #include "LightsController.h"
 #include "BatterySensor.h"
 #include "SDcardController.h"
-//#include "SystemManager.h"
-//#include "SlaveHandler.h"
-//#include "WifiManager.h"
+#include "SystemManager.h"
+#include "SlaveHandler.h"
+#include "WifiManager.h"
 
 //Set simulate to true to enable simulator class (see Simulator.cpp/h)
 #if Simulate
@@ -48,7 +48,7 @@ void StartRaceMain();
 void StopRaceMain();
 void mdnsServerSetup();
 void serialEvent();
-//void Core0Loop(void *parameter);
+void Core0Loop(void *parameter);
 void HandleSerialCommands();
 void HandleRemoteAndButtons();
 void HandleLCDUpdates();

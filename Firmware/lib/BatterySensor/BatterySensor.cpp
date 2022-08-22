@@ -15,8 +15,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see <http://www.gnu.org/licenses/>
-#include "BatterySensor.h"
-#include "config.h"
+#include <BatterySensor.h>
 
 /// <summary>
 ///   Initialises this object.

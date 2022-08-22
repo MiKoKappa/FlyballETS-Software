@@ -105,6 +105,9 @@ void RaceHandlerClass::_ChangeDogNumber(uint8_t iNewDogNumber)
 /// </summary>
 void RaceHandlerClass::Main()
 {
+   //Handle scheduled race start
+   this->_HandleScheduledRace();
+   
    // Trigger filterring of sensors interrupts if new records available and 15ms waiting time passed
    while ((_iInputQueueReadIndex != _iInputQueueWriteIndex) && (GET_MICROS - _InputTriggerQueue[_iInputQueueWriteIndex - 1].llTriggerTime > 15000))
    {
@@ -653,6 +656,19 @@ void RaceHandlerClass::ChangeRaceStateToRunning()
 }
 
 /// <summary>
+///   Sets the status of the race to STARTING, should be called at same time when start light
+///   sequence is called.
+/// </summary>
+/// <param name="StartTime">   The time in milliseconds at which the race should start. </param>
+void RaceHandlerClass::StartRace(unsigned long StartTime)
+{
+   _lSchduledRaceStartTime = StartTime;
+   ESP_LOGI(__FILE__, "Race scheduled to start at %lu ms", StartTime);
+   LightsController.ShowScheduledRace(StartTime - millis());
+   RaceState = RaceStates::SCHEDULED;
+}
+
+/// <summary>
 ///   Initiates race start timer and sets the status of the race to STARTING.
 ///   Should be called when RED light comes ON during start sequence.
 /// </summary>
@@ -670,6 +686,19 @@ void RaceHandlerClass::StartRaceTimer()
 }
 
 /// <summary>
+///   Handles scheduled race start (if any) and makes sure race is started at scheduled time.
+///   Should be called in main loop
+/// </summary>
+void RaceHandlerClass::_HandleScheduledRace()
+{
+   if (RaceState == RaceStates::SCHEDULED && millis() >= _lSchduledRaceStartTime)
+   {
+      this->StartRace();
+      _lSchduledRaceStartTime = 0;
+   }
+}
+
+/// <summary>
 ///   Stops a race.
 /// </summary>
 void RaceHandlerClass::StopRace()
@@ -683,7 +712,7 @@ void RaceHandlerClass::StopRace()
 /// <param name="StopTime">   The time in microseconds at which the race stopped. </param>
 void RaceHandlerClass::StopRace(long long llStopTime)
 {
-   if (RaceState == RUNNING)
+   if (RaceState == RaceStates::RUNNING)
    {
       // Race is running, so we have to record the EndTime
       _llRaceEndTime = llStopTime;
@@ -704,7 +733,7 @@ void RaceHandlerClass::StopRace(long long llStopTime)
 /// </summary>
 void RaceHandlerClass::ResetRace()
 {
-   if (RaceState == STOPPED)
+   if (RaceState == RaceStates::STOPPED)
    {
       iCurrentDog = 0;
       iPreviousDog = 0;
@@ -733,6 +762,7 @@ void RaceHandlerClass::ResetRace()
       _bPotentialNegativeCrossDetected = false;
       _bSensorNoise = false;
       _bLastStringBAba = false;
+      _lSchduledRaceStartTime = 0;
 
       for (auto &bFault : _bDogFaults)
          bFault = false;
@@ -798,6 +828,7 @@ void RaceHandlerClass::ResetRace()
 #ifdef WiFiON
    // Send updated racedata to any web clients
    WebHandler._bSendRaceData = true;
+   //WebHandler._SendRaceData(_iCurrentRaceId, -1);
 #endif
 }
 
@@ -868,7 +899,7 @@ void RaceHandlerClass::PrintRaceTriggerRecordsToFile()
 void RaceHandlerClass::SetDogFault(uint8_t iDogNumber, DogFaults State)
 {
    // Don't process any faults when race is not running
-   if (RaceState == STOPPED || RaceState == RESET)
+   if (RaceState == STOPPED || RaceState == RESET || RaceState == SCHEDULED)
       return;
    bool bFault;
    // Check if we have to toggle. Assumed only manual faults use TOGGLE option
@@ -908,7 +939,7 @@ void RaceHandlerClass::TriggerSensor1()
 {
    if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
       return;
-   else if (RaceState == RESET)
+   else if (RaceState == RESET || RaceState == SCHEDULED)
    {
       if (digitalRead(_iS1Pin) == 1)
          _bRaceReadyFaultON = true;
@@ -929,7 +960,7 @@ void RaceHandlerClass::TriggerSensor2()
 {
    if (RaceState == STOPPED && GET_MICROS > (_llRaceEndTime + 500000))
       return;
-   else if (RaceState == RESET)
+   else if (RaceState == RESET || RaceState == SCHEDULED)
    {
       if (digitalRead(_iS2Pin) == 1)
          _bRaceReadyFaultON = true;
@@ -1341,11 +1372,14 @@ String RaceHandlerClass::GetRaceStateString()
    case RaceHandlerClass::STARTING:
       strRaceState = " START ";
       break;
-   case RaceHandlerClass::RUNNING:
+   case RaceStates::RUNNING:
       strRaceState = "RUNNING";
       break;
    case RaceHandlerClass::RESET:
       strRaceState = " READY ";
+      break;
+   case RaceStates::SCHEDULED:
+      strRaceState = "SCHEDUL";
       break;
    default:
       break;

@@ -6,6 +6,7 @@
 #include "Arduino.h"
 
 #define NUM_HISTORIC_RACE_RECORDS 100
+#include "Structs.h"
 
 class RaceHandlerClass
 {
@@ -20,7 +21,8 @@ public:
       RESET,
       STARTING,
       RUNNING,
-      STOPPED
+      STOPPED,
+      SCHEDULED
    };
    RaceStates RaceState = RESET;
    RaceStates PreviousRaceState = RESET;
@@ -39,6 +41,7 @@ public:
    void Main();
    void ChangeRaceStateToRunning();
    void StartRaceTimer();
+   void StartRace(long long StartTime);
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
@@ -82,6 +85,7 @@ private:
    long long _llS2CrossedUnsafeGetMicrosTime;
    long long _llLastTransitionStringUpdate;
    long long _llRaceElapsedTime;
+   long long _lSchduledRaceStartTime;
 
    uint8_t _iS1Pin;
    uint8_t _iS2Pin;
@@ -149,6 +153,7 @@ private:
    STriggerRecord _QueuePop();
    bool _QueueEmpty();
    void _AddToTransitionString(STriggerRecord _InterruptTrigger);
+   void _HandleScheduledRace();
 };
 
 extern RaceHandlerClass RaceHandler;

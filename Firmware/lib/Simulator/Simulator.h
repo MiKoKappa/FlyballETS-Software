@@ -11,13 +11,10 @@
 class SimulatorClass
 {
 protected:
-
-
 public:
    void init(uint8_t iS1Pin, uint8_t iS2Pin);
    void ChangeSimulatedRaceID(uint iSimulatedRaceID);
    void Main();
-
 
 private:
    uint8_t _iS1Pin;
@@ -38,4 +35,3 @@ private:
 extern class SimulatorClass Simulator;
 
 #endif
-

@@ -21,6 +21,8 @@
 #include <NeoPixelBus.h>
 #include "config.h"
 #include "Structs.h"
+//#include "RaceHandler.h"
+//#include "WebHandler.h"
 
 class LightsControllerClass
 {
@@ -34,6 +36,7 @@ public:
 
    //Overal state of this class
    enum OverallStates
+   
    {
       WARNING,
       INITIATED,
@@ -75,6 +78,7 @@ public:
    void ToggleFaultLight(uint8_t iDogNumber, LightStates byLightState);
    void ReaceReadyFault(LightStates byLightState);
    void ToggleStartingSequence();
+   void ShowScheduledRace(unsigned long Duration);
 
    stLightsState GetLightsState();
 
@@ -86,6 +90,7 @@ private:
    //This byte contains the combined states of all ligths at any given time
    byte _byCurrentLightsState = 255;
    byte _byNewLightsState = 0;
+   //???bool _bStartSequenceStarted = 0;
 
    unsigned long _lLightsOnSchedule[8];
    unsigned long _lLightsOutSchedule[8];
