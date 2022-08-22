@@ -41,7 +41,7 @@ public:
    void Main();
    void ChangeRaceStateToRunning();
    void StartRaceTimer();
-   void StartRace(long long StartTime);
+   void StartRace(unsigned long StartTime);
    void StopRace();
    void StopRace(long long llStopTime);
    void ResetRace();
@@ -85,7 +85,7 @@ private:
    long long _llS2CrossedUnsafeGetMicrosTime;
    long long _llLastTransitionStringUpdate;
    long long _llRaceElapsedTime;
-   long long _lSchduledRaceStartTime;
+   unsigned long _lSchduledRaceStartTime;
 
    uint8_t _iS1Pin;
    uint8_t _iS2Pin;

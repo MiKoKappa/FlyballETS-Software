@@ -693,7 +693,7 @@ void RaceHandlerClass::_HandleScheduledRace()
 {
    if (RaceState == RaceStates::SCHEDULED && millis() >= _lSchduledRaceStartTime)
    {
-      this->StartRace();
+      this->StartRaceTimer();
       _lSchduledRaceStartTime = 0;
    }
 }
