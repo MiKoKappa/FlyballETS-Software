@@ -14,8 +14,8 @@
 // along with this program.If not, see <http://www.gnu.org/licenses/>
 
 #include "WifiManager.h"
-#include <SlaveHandler.h>
-#include <SettingsManager.h>
+#include "SlaveHandler.h"
+#include "SettingsManager.h"
 #include "enums.h"
 #include "WiFi.h"
 
@@ -23,9 +23,9 @@ void WifiManager::SetupWiFi()
 {
    //WiFi.onEvent(std::bind(&WifiManager::WiFiEvent, this, std::placeholders::_1));
    WiFi.onEvent(
-       [this](WiFiEvent_t event, system_event_info_t info) {
-          this->WiFiEvent(event, info);
-       });
+      [this](WiFiEvent_t event, system_event_info_t info) {
+         this->WiFiEvent(event, info);
+      });
    uint8_t iOpMode = SettingsManager.getSetting("OperationMode").toInt();
    _strAPName = SettingsManager.getSetting("APName");
    String strAPPass = SettingsManager.getSetting("APPass");
@@ -36,8 +36,8 @@ void WifiManager::SetupWiFi()
       _IPGateway = IPAddress(192, 168, 20, 1);
       _IPSubnet = IPAddress(255, 255, 255, 0);
       if (!WiFi.mode(WIFI_MODE_AP) ||
-          !WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet) ||
-          !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()))
+         !WiFi.softAPConfig(_IPGateway, _IPGateway, _IPSubnet) ||
+         !WiFi.softAP(_strAPName.c_str(), strAPPass.c_str()))
       {
          ESP_LOGW(__FILE__, "[WiFi]: Error initializing softAP with name %s!", _strAPName.c_str());
       }

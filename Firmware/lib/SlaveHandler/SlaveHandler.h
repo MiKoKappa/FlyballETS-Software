@@ -9,7 +9,7 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <WebSocketsClient.h>
-#include <SettingsManager.h>
+#include "SettingsManager.h"
 #include <enums.h>
 #define CONNECT_CHECK 1000
 

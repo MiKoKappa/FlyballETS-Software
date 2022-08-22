@@ -30,7 +30,6 @@
 #endif
 #include "SlaveHandler.h"
 #include "SystemManager.h"
-#include "global.h"
 
 
 class WebHandlerClass

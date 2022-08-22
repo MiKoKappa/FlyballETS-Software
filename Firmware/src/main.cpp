@@ -123,6 +123,8 @@ void setup()
 #endif
 
 #ifdef WiFiON
+   String strAPPass = SettingsManager.getSetting("APPass");
+   
    //Init Wifi setup
    wifiManager.SetupWiFi();
 
@@ -340,26 +342,6 @@ void StopRaceMain()
 }
 
 /// <summary>
-///   Start a race.
-/// </summary>
-void StartRaceMain()
-{
-   if (LightsController.bModeNAFA)
-      LightsController.WarningStartSequence();
-   else
-      LightsController.InitiateStartSequence();
-}
-
-/// <summary>
-///   Stop a race.
-/// </summary>
-void StopRaceMain()
-{
-   RaceHandler.StopRace();
-   LightsController.DeleteSchedules();
-}
-
-/// <summary>
 ///   Starts (if stopped) or stops (if started) a race. Start is only allowed if race is stopped and reset.
 /// </summary>
 void StartStopRace()
@@ -381,6 +363,7 @@ void ResetRace()
    LightsController.ResetLights();
 }
 
+#ifdef WiFiON
 void Core0Loop(void *parameter)
 {
    SlaveHandler.init();
